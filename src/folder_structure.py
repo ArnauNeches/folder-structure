@@ -1,9 +1,11 @@
 import os
-import sys
+import argparse
 
-def scanner(path: str, depth: int = 0, skip: list[str]=None):
+def scanner(path: str = ".", depth: int = 0, skip: list[str] = None, indent: bool = False):
     if skip is None:
         skip=[]
+ 
+    indent1 = "     " if indent else "   "
 
     with os.scandir(path) as entries:
         for entry in entries:
@@ -11,23 +13,23 @@ def scanner(path: str, depth: int = 0, skip: list[str]=None):
             if entry.name in skip:
                 continue
 
-            if entry.is_dir() and entry.name not in (".", ".."):  
-                print(" "*depth+entry.name+"/")  
-                scanner(os.path.join(path, entry.name), depth+1, skip)
+            if entry.is_dir():  
+                print(indent1*depth+entry.name+"/")  
+                scanner(os.path.join(path, entry.name), depth+1, skip, indent)
             else:
-                print("  "*depth+entry.name) 
+                print(indent1*depth+entry.name) 
 
 def main():
-    path = "."
-    skip = []
 
-    if len(sys.argv) > 1:
-        path = sys.argv[1]
+    parser = argparse.ArgumentParser(description="Directory scanner")
+    parser.add_argument("path", nargs="?", default=".", help="Path to scan")
+    parser.add_argument("--skip", "-s", help="Comma-separated list of files/folders to skip", default="")
+    parser.add_argument("-l", help="Longer indentation", action="store_true")
 
-    if len(sys.argv) > 2:
-        skip = sys.argv[2].split(",")
+    args = parser.parse_args()
+    skip = [s.strip() for s in args.skip.split(",") if s]
 
-    scanner(path, 0, skip)
+    scanner(args.path, 0, skip, args.l)
 
 if __name__ == "__main__":
     main()
